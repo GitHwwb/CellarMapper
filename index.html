@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CellarMapper — Visualize Your Wine Collection</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#1a1a2e;color:#e0e0e0}
+#map{height:50vh;width:100%}
+#map2{height:50vh}
+.header{padding:14px 24px;background:#16213e;border-bottom:1px solid #333;display:flex;justify-content:space-between;align-items:center}
+.header h1{font-size:20px;color:#fff}.header .stats{font-size:13px;color:#aaa;margin-left:16px}
+.filter-bar{padding:8px 24px;background:#16213e;display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid #333}
+.fbtn{padding:4px 12px;border-radius:12px;border:1px solid #444;background:transparent;color:#ccc;cursor:pointer;font-size:12px;transition:all .2s}
+.fbtn.active{color:#fff}.fbtn.active-red{background:#722f37;border-color:#a94442}.fbtn.active-white{background:#8b7a0c;border-color:#d4af37}.fbtn.active-rose{background:#9e4a5a;border-color:#e8a0b0}.fbtn.active-neutral{background:#4a5568;border-color:#718096}.fbtn:hover{border-color:#888}
+.dash{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;padding:16px 24px}
+.card{background:#16213e;border-radius:8px;padding:16px;border:1px solid #333;max-height:400px;overflow-y:auto}
+.card h3{font-size:12px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.bar-row{display:flex;align-items:center;margin-bottom:5px;font-size:12px}
+.bar-label{width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#ccc}
+.bar-track{flex:1;height:14px;background:#0f3460;border-radius:3px;margin:0 8px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;transition:width .4s}
+.bar-count{width:28px;text-align:right;color:#888;font-size:11px}
+.fill-red{background:linear-gradient(90deg,#722f37,#a94442)}
+.fill-white{background:linear-gradient(90deg,#b8960c,#d4af37)}
+.fill-rose{background:linear-gradient(90deg,#d4838f,#e8a0b0)}
+.fill-neutral{background:linear-gradient(90deg,#4a5568,#718096)}
+.tl{display:flex;align-items:flex-end;gap:2px;height:90px;margin-top:8px}
+.tl-bar{flex:1;border-radius:2px 2px 0 0;min-width:14px;position:relative;cursor:pointer;transition:opacity .2s}
+.tl-bar:hover{opacity:.7}
+.tl-bar .tip{display:none;position:absolute;bottom:105%;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:2px 6px;border-radius:3px;font-size:10px;white-space:nowrap;z-index:10}
+.tl-bar:hover .tip{display:block}
+.tl-labels{display:flex;gap:2px;font-size:10px;color:#666;margin-top:2px}
+.tl-labels span{flex:1;text-align:center;min-width:14px}
+.leaflet-popup-content{color:#333;font-size:12px;line-height:1.5;max-height:300px;overflow-y:auto}
+.pw{margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid #eee}.pw:last-child{border:0;margin:0;padding:0}
+.pw-name{font-weight:600;color:#111}.pw-note{font-style:italic;color:#555;font-size:11px;margin-top:2px}
+.pw-meta{color:#777;font-size:11px}
+.search-bar{padding:8px 24px;background:#1a1a2e;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.search-bar input{flex:1;padding:8px 12px;border-radius:6px;border:1px solid #444;background:#16213e;color:#e0e0e0;font-size:13px;outline:none;min-width:200px}
+.search-bar input:focus{border-color:#722f37}
+.search-bar input::placeholder{color:#666}
+.search-clear{background:none;border:none;color:#888;font-size:16px;cursor:pointer;padding:4px 8px}
+.search-clear:hover{color:#fff}
+.region-toggle{padding:4px 12px;border-radius:12px;border:1px solid #444;background:transparent;color:#ccc;cursor:pointer;font-size:12px;transition:all .2s}
+.region-toggle.active{background:#4a3728;border-color:#8b7355;color:#d4af37}
+.region-toggle:hover{border-color:#888}
+.detail-panel{margin:0 24px 16px;background:#16213e;border:1px solid #444;border-radius:8px;padding:16px;max-height:300px;overflow-y:auto;position:relative}
+.detail-panel h4{font-size:14px;color:#fff;margin-bottom:10px}
+.detail-panel .close-btn{position:absolute;top:10px;right:14px;background:none;border:none;color:#888;font-size:18px;cursor:pointer}
+.detail-panel .close-btn:hover{color:#fff}
+.dp-wine{padding:8px 0;border-bottom:1px solid #333}.dp-wine:last-child{border:0}
+.dp-name{color:#e0e0e0;font-weight:600;font-size:13px}
+.dp-meta{color:#888;font-size:12px;margin-top:2px}
+.dp-note{color:#aaa;font-size:12px;font-style:italic;margin-top:3px}
+#map-wrapper.fullscreen{position:fixed!important;top:0;left:0;width:100vw!important;height:100vh!important;z-index:9999;background:#1a1a2e}
+#map-wrapper.fullscreen #map{height:100%!important;width:100%!important}
+#map-wrapper.fullscreen.split-active #map{width:50%!important;display:inline-block!important;vertical-align:top}
+#map-wrapper.fullscreen.split-active #map2{display:inline-block!important;width:50%!important;height:100%!important;vertical-align:top}
+.fs-btn{position:absolute;top:10px;right:10px;z-index:10000;background:#16213e;border:1px solid #555;color:#ccc;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:14px}
+.fs-btn:hover{background:#333;color:#fff}
+.fs-controls{display:none;position:absolute;top:10px;right:50px;z-index:10001;background:rgba(22,33,62,.92);border:1px solid #555;border-radius:6px;padding:0;max-width:200px}
+.fs-ctrl-toggle{width:100%;background:none;border:none;color:#ccc;padding:8px 12px;cursor:pointer;font-size:12px;text-align:left}
+.fs-ctrl-toggle:hover{color:#fff}
+.fs-ctrl-body{padding:8px 12px;display:flex;flex-wrap:wrap;gap:4px}
+.fs-ctrl-body .fbtn{font-size:11px;padding:3px 8px}
+.fs-ctrl-body .region-toggle{font-size:11px;padding:3px 8px;width:100%}
+.fs-search{width:100%;padding:5px 8px;border-radius:4px;border:1px solid #444;background:#0f3460;color:#e0e0e0;font-size:11px;outline:none;margin-top:2px}
+.fs-search:focus{border-color:#722f37}
+.fs-search::placeholder{color:#666}
+#map-wrapper.fullscreen .fs-controls{display:block}
+.geo-info{position:absolute;bottom:30px;left:10px;z-index:10000;background:rgba(22,33,62,.92);border:1px solid #555;border-radius:6px;padding:10px 14px;color:#e0e0e0;font-size:12px;max-width:320px;display:none;line-height:1.6;max-height:250px;overflow-y:auto}
+.geo-info h5{margin:0 0 4px;color:#d4af37;font-size:13px}
+.geo-info .geo-close{position:absolute;top:4px;right:8px;background:none;border:none;color:#888;cursor:pointer;font-size:14px}
+.geo-info .geo-close:hover{color:#fff}
+[id$="-legend"]{top:90px!important}
+@media(max-width:900px){.dash{grid-template-columns:1fr}}
+.region-label{background:none!important;border:none!important;box-shadow:none!important;color:#8b7355;font-size:11px;font-weight:600;letter-spacing:.5px;text-shadow:0 0 4px rgba(0,0,0,.8),0 0 8px rgba(0,0,0,.6);white-space:nowrap;pointer-events:none}
+
+/* Landing / upload screen */
+#landing{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80vh;padding:40px 24px;text-align:center}
+#landing h2{font-size:28px;color:#fff;margin-bottom:8px}
+#landing p{color:#888;font-size:14px;max-width:500px;margin-bottom:24px;line-height:1.6}
+.drop-zone{width:100%;max-width:480px;border:2px dashed #555;border-radius:12px;padding:48px 24px;cursor:pointer;transition:all .2s;background:#16213e}
+.drop-zone:hover,.drop-zone.dragover{border-color:#d4af37;background:#1a1a3e}
+.drop-zone h3{color:#d4af37;font-size:16px;margin-bottom:8px}
+.drop-zone p{color:#888;font-size:12px;margin:0}
+.drop-zone input{display:none}
+#upload-error{color:#a94442;font-size:13px;margin-top:12px;display:none}
+#upload-info{color:#888;font-size:12px;margin-top:16px;max-width:480px;text-align:left;line-height:1.6}
+#upload-info summary{cursor:pointer;color:#d4af37;font-size:13px}
+#app{display:none}
+</style>
+</head>
+<body>
+
+<!-- Landing screen -->
+<div id="landing">
+<h2>CellarMapper</h2>
+<p>Visualize your wine collection on an interactive world map with terroir overlays, tasting notes, and charts.</p>
+<div class="drop-zone" id="drop-zone">
+<h3>Drop your CSV here</h3>
+<p>or click to browse</p>
+<input type="file" id="csv-input" accept=".csv,.txt">
+</div>
+<div id="upload-error"></div>
+<details id="upload-info">
+<summary>How to export your data</summary>
+<br>
+<b>CellarTracker:</b><br>
+1. Log in to <a href="https://www.cellartracker.com" target="_blank" style="color:#d4af37">cellartracker.com</a><br>
+2. Go to My Cellar → List View<br>
+3. Click "Download" (bottom of page) → choose CSV<br>
+4. Upload the downloaded file here<br><br>
+<b>Vivino:</b><br>
+Vivino doesn't have a native export. Use the <a href="https://github.com/sulfo/Vivino-Exporter" target="_blank" style="color:#d4af37">Vivino Exporter</a> browser extension to export your wines as CSV, then upload here.<br><br>
+<b>Other apps:</b><br>
+Any CSV with columns like Wine, Vintage, Country, Region, Varietal, Type/Color will work. Missing columns are handled gracefully.
+</details>
+<div style="margin-top:24px"><a href="https://www.buymeacoffee.com/Jon.L" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height:60px;width:217px"></a></div>
+</div>
+
+<!-- App (hidden until CSV loaded) -->
+<div id="app">
+<div class="header">
+<h1>CellarMapper</h1>
+<div class="stats" id="stats"></div>
+<button class="region-toggle" id="split-toggle" onclick="toggleSplit()" style="margin-left:8px;font-size:11px">⫸ Split View</button>
+<button class="fbtn" onclick="resetApp()" style="margin-left:8px;font-size:11px;border-style:dashed">↻ New CSV</button>
+<a href="https://www.buymeacoffee.com/Jon.L" target="_blank" style="margin-left:auto"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height:32px;width:auto;vertical-align:middle"></a>
+</div>
+<div class="filter-bar" id="filters"></div>
+<div class="search-bar">
+<button class="region-toggle" id="region-toggle" onclick="toggleRegions()">🗺 Regions</button>
+<button class="region-toggle" id="geo-toggle" onclick="toggleGeology()">🪨 Geology</button>
+<button class="region-toggle" id="climate-toggle" onclick="toggleClimate()">🌡 Climate</button>
+<button class="region-toggle" id="elev-toggle" onclick="toggleElevation()">⛰ Elevation</button>
+<button class="region-toggle" id="sat-toggle" onclick="toggleSatellite()">🛰 Satellite</button>
+<button class="region-toggle" id="soil-toggle" onclick="toggleSoil()">🌱 Soil</button>
+<input type="text" id="wine-search" placeholder="Search wines by name, varietal, region, notes..." oninput="doSearch(this.value)">
+<button class="search-clear" id="search-clear" onclick="clearSearch()" style="display:none">✕</button>
+</div>
+<div style="position:relative" id="map-wrapper">
+<div id="map"></div><div id="map2" style="display:none"></div>
+<button class="fs-btn" id="fs-btn" onclick="toggleFullscreen()">⛶</button>
+<div class="fs-controls" id="fs-controls">
+<button class="fs-ctrl-toggle" id="fs-ctrl-toggle" onclick="toggleFsControls()">▼ Controls</button>
+<div class="fs-ctrl-body" id="fs-ctrl-body">
+<button class="fbtn" onclick="if(window._buildFilters){activeFilters.clear();window._buildFilters();applyTheme();updateAll()}">All</button>
+<button class="fbtn" onclick="fsFilter('Red')">Red</button>
+<button class="fbtn" onclick="fsFilter('White')">White</button>
+<button class="fbtn" onclick="fsFilter('Rosé')">Rosé</button>
+<hr style="border-color:#444;margin:6px 0;width:100%">
+<button class="region-toggle" onclick="toggleRegions();syncFsBtn(this,'region-toggle')">🗺 Regions</button>
+<button class="region-toggle" onclick="toggleGeology();syncFsBtn(this,'geo-toggle')">🪨 Geology</button>
+<button class="region-toggle" onclick="toggleClimate();syncFsBtn(this,'climate-toggle')">🌡 Climate</button>
+<button class="region-toggle" onclick="toggleElevation();syncFsBtn(this,'elev-toggle')">⛰ Elevation</button>
+<button class="region-toggle" onclick="toggleSatellite();syncFsBtn(this,'sat-toggle')">🛰 Satellite</button>
+<button class="region-toggle" onclick="toggleSoil();syncFsBtn(this,'soil-toggle')">🌱 Soil</button>
+<hr style="border-color:#444;margin:6px 0;width:100%">
+<input type="text" class="fs-search" placeholder="Search wines..." oninput="doSearch(this.value);document.getElementById('wine-search').value=this.value">
+</div>
+</div>
+<div class="geo-info" id="geo-info"><button class="geo-close" onclick="hideGeoInfo()">✕</button><div id="geo-content"></div></div>
+</div>
+<div class="dash">
+<div class="card"><h3>By Country</h3><div id="c-country"></div></div>
+<div class="card"><h3>Top Varietals</h3><div id="c-varietal"></div></div>
+<div class="card"><h3>Timeline</h3><div id="c-timeline"></div></div>
+</div>
+<div id="detail-panel" class="detail-panel" style="display:none"></div>
+</div>
+
+<script>
+// ===== EXPANDED GEO LOOKUP (~300 wine regions) =====
+const GEO={
+"California":[36.77,-119.42],"Napa Valley":[38.50,-122.27],"Sonoma County":[38.52,-122.81],
+"Central Coast":[35.28,-120.66],"Monterey":[36.24,-121.77],"Carneros":[38.25,-122.37],
+"Russian River Valley":[38.52,-122.88],"Sonoma Coast":[38.45,-123.05],"Sta. Rita Hills":[34.63,-120.47],
+"Paso Robles":[35.63,-120.69],"Santa Barbara County":[34.71,-119.99],"Anderson Valley":[39.07,-123.36],
+"Happy Canyon of Santa Barbara":[34.68,-119.82],"Spring Mountain District":[38.55,-122.52],
+"Calistoga":[38.58,-122.58],"Stags Leap District":[38.40,-122.35],"Oak Knoll District":[38.35,-122.32],
+"Coombsville":[38.28,-122.22],"Alexander Valley":[38.72,-122.85],"Dry Creek Valley":[38.68,-122.93],
+"Sonoma Mountain":[38.38,-122.60],"Lodi":[38.13,-121.27],"Santa Lucia Highlands":[36.38,-121.35],
+"Santa Maria Valley":[34.95,-120.44],"Mendocino County":[39.15,-123.20],"North Coast":[39.0,-123.0],
+"Rutherford":[38.45,-122.42],"St. Helena":[38.51,-122.47],"Howell Mountain":[38.55,-122.42],
+"Mount Veeder":[38.38,-122.48],"Atlas Peak":[38.42,-122.25],"Yountville":[38.40,-122.36],
+"Chalk Hill":[38.60,-122.75],"Knights Valley":[38.65,-122.65],"Santa Cruz Mountains":[37.15,-122.05],
+"Livermore Valley":[37.68,-121.77],"Sierra Foothills":[38.75,-120.80],"Temecula Valley":[33.49,-117.10],
+"Santa Ynez Valley":[34.73,-120.08],"Edna Valley":[35.18,-120.60],"Arroyo Grande Valley":[35.12,-120.58],
+"Willamette Valley":[45.07,-123.07],"Eola - Amity Hills":[44.95,-123.15],"Oregon":[44.0,-120.5],
+"Washington":[46.73,-120.74],"Columbia Valley":[46.5,-119.5],"Horse Heaven Hills":[46.0,-119.5],
+"Red Mountain":[46.30,-119.48],"Walla Walla Valley":[46.07,-118.33],"Dundee Hills":[45.28,-123.05],
+"Ribbon Ridge":[45.35,-123.08],"Chehalem Mountains":[45.35,-122.95],"McMinnville":[45.21,-123.20],
+"Yamhill-Carlton":[45.35,-123.18],"Yakima Valley":[46.60,-120.50],
+"Finger Lakes":[42.65,-76.95],"Long Island":[40.92,-72.65],"New Jersey":[39.83,-74.87],
+"Virginia":[38.00,-79.50],
+"Burgundy":[47.04,4.84],"Côte de Nuits":[47.15,4.95],"Côte de Beaune":[46.95,4.85],
+"Beaujolais":[46.15,4.65],"Chablis":[47.81,3.80],"Bourgogne-Chitry":[47.80,3.72],
+"Mâconnais":[46.30,4.80],"Côte Chalonnaise":[46.75,4.75],
+"Champagne":[49.25,3.96],"Bordeaux":[44.84,-0.58],"Libournais":[44.92,-0.15],
+"Médoc":[45.15,-0.85],"Haut-Médoc":[45.05,-0.75],"Saint-Émilion":[44.89,-0.15],
+"Pomerol":[44.93,-0.20],"Margaux":[45.04,-0.67],"Pauillac":[45.20,-0.75],
+"Saint-Julien":[45.16,-0.74],"Saint-Estèphe":[45.26,-0.77],"Pessac-Léognan":[44.73,-0.60],
+"Graves":[44.60,-0.50],"Sauternes":[44.55,-0.35],"Côtes de Bourg":[45.04,-0.56],
+"Rhône":[44.12,4.81],"Northern Rhône":[45.15,4.85],"Southern Rhône":[44.06,4.83],
+"Châteauneuf-du-Pape":[44.06,4.83],"Hermitage":[45.08,4.84],"Côte-Rôtie":[45.47,4.82],
+"Crozes-Hermitage":[45.05,4.85],"Saint-Joseph":[45.20,4.82],"Cornas":[44.96,4.85],
+"Condrieu":[45.45,4.78],"Gigondas":[44.17,5.00],"Vacqueyras":[44.15,4.98],
+"Languedoc Roussillon":[43.61,3.88],"Languedoc":[43.61,3.88],"Roussillon":[42.70,2.90],
+"Loire Valley":[47.38,0.69],"Upper Loire":[47.33,2.83],"Sancerre":[47.33,2.83],
+"Pouilly-Fumé":[47.28,2.95],"Vouvray":[47.40,0.80],"Muscadet":[47.10,-1.55],
+"Alsace":[48.20,7.35],"Provence":[43.50,6.20],"Bandol":[43.18,5.75],
+"Côtes de Provence":[43.45,6.25],"Jura":[46.75,5.85],"Corsica":[42.15,9.10],
+"Cahors":[44.45,1.44],"Bergerac":[44.85,0.48],
+"Mosel Saar Ruwer":[49.73,6.63],"Mosel":[49.73,6.63],"Rheinhessen":[49.85,8.27],
+"Baden":[48.0,7.85],"Pfalz":[49.35,8.15],"Rheingau":[50.02,8.05],
+"Nahe":[49.80,7.85],"Franken":[49.80,10.00],"Württemberg":[48.80,9.20],
+"Piedmont":[44.69,8.04],"Langhe":[44.60,8.00],"Barolo":[44.60,7.94],
+"Barbaresco":[44.73,8.08],"Tuscany":[43.35,11.32],"Chianti":[43.47,11.25],
+"Chianti Classico":[43.47,11.25],"Brunello di Montalcino":[43.06,11.49],
+"Bolgheri":[43.23,10.62],"Campania":[40.83,14.25],"Puglia":[41.13,16.87],
+"Veneto":[45.44,10.99],"Valpolicella":[45.52,10.88],"Sardinia":[39.22,9.12],
+"Sicily":[37.60,14.27],"Etna":[37.75,15.00],"Trentino-Alto Adige":[46.07,11.12],
+"Trentino Alto-Adige / Veneto":[46.07,11.12],"Friuli Venezia Giulia":[45.95,13.40],
+"Abruzzo":[42.35,13.40],"Umbria":[42.73,12.39],"Lombardy":[45.47,9.19],
+"Franciacorta":[45.60,10.05],"Soave":[45.42,11.25],"Prosecco":[45.90,12.00],
+"Catalunya":[41.59,1.52],"Tarragona":[41.12,1.25],"La Rioja":[42.47,-2.45],
+"Rioja":[42.47,-2.45],"Ribera del Duero":[41.65,-3.70],"Priorat":[41.20,0.85],
+"Penedès":[41.35,1.70],"Montsant":[41.12,1.25],"Rías Baixas":[42.30,-8.70],
+"Rueda":[41.40,-4.95],"Toro":[41.52,-5.40],"Jerez":[36.68,-6.14],
+"Douro":[41.16,-7.79],"Minho":[41.56,-8.40],"Beiras":[40.64,-7.90],
+"Alentejo":[38.57,-7.91],"Dão":[40.52,-7.90],"Bairrada":[40.38,-8.45],
+"Madeira":[32.65,-16.91],"Vinho Verde":[41.56,-8.40],
+"Barossa Valley":[-34.56,138.95],"McLaren Vale":[-35.22,138.55],"Clare Valley":[-33.83,138.60],
+"Eden Valley":[-34.63,139.05],"Coonawarra":[-37.29,140.83],"Margaret River":[-33.95,115.08],
+"Hunter Valley":[-32.75,151.15],"Yarra Valley":[-37.75,145.50],"Mornington Peninsula":[-38.35,145.05],
+"Tasmania":[-42.00,146.50],"Adelaide Hills":[-35.02,138.72],
+"Marlborough":[-41.52,173.95],"Central Otago":[-45.03,169.20],"Hawke's Bay":[-39.65,176.85],
+"Martinborough":[-41.22,175.47],"Waipara":[-43.05,172.75],
+"Mendoza":[-32.89,-68.83],"Patagonia":[-40.80,-65.00],"Uco Valley":[-33.65,-69.25],
+"Luján de Cuyo":[-33.03,-68.88],"Salta":[-25.37,-65.40],"Cafayate":[-26.07,-66.03],
+"Casablanca Valley":[-33.32,-71.41],"Aconcagua Valley":[-32.83,-70.73],
+"Rapel Valley":[-34.17,-71.22],"Colchagua Valley":[-34.40,-71.22],
+"Maipo Valley":[-33.50,-70.60],"Leyda":[-33.62,-71.42],
+"Stellenbosch":[-33.93,18.86],"Franschhoek":[-33.87,19.12],"Swartland":[-33.45,18.75],
+"Walker Bay":[-34.40,19.30],"Paarl":[-33.73,18.97],"Constantia":[-34.03,18.42],
+"Galilee":[32.87,35.50],"Golan Heights":[33.00,35.75],
+"Kakheti":[41.65,45.70],"Tokaj":[48.12,21.41],
+"Wachau":[48.37,15.42],"Kamptal":[48.55,15.73],"Burgenland":[47.85,16.52],
+"Santorini":[36.42,25.43],"Nemea":[37.82,22.66],
+"Bekaa Valley":[33.85,35.90],"Okanagan Valley":[49.88,-119.50],"Niagara Peninsula":[43.10,-79.20],
+"Ningxia":[38.47,106.27],
+"USA":[39.83,-98.58],"France":[46.60,2.21],"Germany":[50.11,8.68],
+"Italy":[42.50,12.57],"Spain":[40.42,-3.70],"Chile":[-33.45,-70.67],
+"Portugal":[39.40,-8.22],"Argentina":[-34.60,-58.38],"Australia":[-25.27,133.78],
+"New Zealand":[-41.29,174.78],"South Africa":[-33.93,18.42],
+"Israel":[31.77,35.23],"Georgia":[41.72,44.79],"Hungary":[47.50,19.04],
+"Austria":[48.21,16.37],"Greece":[37.98,23.73],"Lebanon":[33.89,35.50],
+"Croatia":[45.10,15.20],"Slovenia":[46.05,14.51],"Canada":[43.65,-79.38],
+"England":[51.10,0.50],"China":[39.90,116.40],"Japan":[35.68,139.69],
+"Uruguay":[-34.88,-56.17],"Brazil":[-29.17,-51.18],"Romania":[44.43,26.10],
+"Moldova":[47.01,28.86],"Bulgaria":[42.70,23.32],"Turkey":[39.93,32.85],
+"India":[18.52,73.86],"Coastal Region":[-33.93,18.42]
+};
+
+// ===== CSV PARSER =====
+// Auto-detects CellarTracker vs Vivino vs generic CSV format
+function parseCSV(text){
+  let lines=text.split(/\r?\n/).filter(l=>l.trim());
+  if(lines.length<2){throw new Error('CSV has no data rows')}
+  // Parse header
+  let header=parseCSVLine(lines[0]);
+  let headerLower=header.map(h=>h.toLowerCase().trim());
+  // Detect format
+  let format='generic';
+  if(headerLower.includes('iwine')||headerLower.includes('mastervarietal'))format='cellartracker';
+  else if(headerLower.includes('wine id')||headerLower.includes('wine name'))format='vivino';
+  console.log('Detected CSV format:',format,'| Columns:',header.length,'| Rows:',lines.length-1);
+  // Build column mapping
+  let colMap=buildColumnMap(headerLower,format);
+  // Parse rows
+  let wines=[];
+  for(let i=1;i<lines.length;i++){
+    let vals=parseCSVLine(lines[i]);
+    if(vals.length<3)continue;
+    let w=mapRow(vals,colMap,headerLower);
+    if(w.wine&&w.country)wines.push(w);
+  }
+  return{wines,format,totalRows:lines.length-1,validRows:wines.length};
+}
+
+function parseCSVLine(line){
+  let result=[];let current='';let inQuotes=false;
+  for(let i=0;i<line.length;i++){
+    let c=line[i];
+    if(c==='"'){
+      if(inQuotes&&line[i+1]==='"'){current+='"';i++}
+      else inQuotes=!inQuotes;
+    }else if(c===','&&!inQuotes){result.push(current.trim());current=''}
+    else current+=c;
+  }
+  result.push(current.trim());
+  return result;
+}
+
+function buildColumnMap(headerLower,format){
+  let m={};
+  // Try exact matches first, then fuzzy
+  let find=(names)=>{for(let n of names){let i=headerLower.indexOf(n);if(i>=0)return i}return-1};
+  m.wine=find(['wine','wine name','name','title']);
+  m.vintage=find(['vintage','year']);
+  m.type=find(['type','wine type']);
+  m.color=find(['color','wine color']);
+  m.category=find(['category']);
+  m.varietal=find(['varietal','grape','grapes','grape variety']);
+  m.masterVarietal=find(['mastervarietal','master varietal','primary grape']);
+  m.country=find(['country','origin country']);
+  m.region=find(['region','wine region']);
+  m.subRegion=find(['subregion','sub-region','sub region']);
+  m.appellation=find(['appellation','designation','aoc','doc','ava']);
+  m.vineyard=find(['vineyard']);
+  m.consumed=find(['consumed','date consumed','date tasted','date','tasting date']);
+  m.note=find(['consumptionnote','consumption note','tasting note','tasting notes','note','notes','review','my review']);
+  m.price=find(['price','cost']);
+  m.rating=find(['rating','my rating','score','user rating']);
+  return m;
+}
+
+function mapRow(vals,colMap,headerLower){
+  let get=(key)=>{let i=colMap[key];return i>=0&&i<vals.length?vals[i].replace(/^"|"$/g,'').trim():''};
+  let wine=get('wine');
+  let vintage=get('vintage');
+  let type=get('type');
+  let color=get('color')||type;
+  let varietal=get('varietal');
+  let masterVarietal=get('masterVarietal')||varietal;
+  let country=get('country');
+  let region=get('region');
+  let subRegion=get('subRegion');
+  let appellation=get('appellation');
+  let consumed=get('consumed');
+  let note=get('note');
+  // Parse consumed date
+  let consumedYear='',consumedMonth='';
+  if(consumed){
+    let dp=consumed.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+    if(dp){consumedMonth=dp[1];consumedYear=dp[3].length===2?'20'+dp[3]:dp[3]}
+    else{let dp2=consumed.match(/(\d{4})[\/\-](\d{1,2})/);if(dp2){consumedYear=dp2[1];consumedMonth=dp2[2]}}
+  }
+  return{wine,vintage,type:type||'Unknown',color:color||type||'Unknown',category:get('category')||'',
+    varietal:varietal||'Unknown',masterVarietal:masterVarietal||varietal||'Unknown',
+    country:country||'',region:region||'',subRegion:subRegion||'Unknown',
+    appellation:appellation||'Unknown',vineyard:get('vineyard')||'Unknown',
+    consumed,consumedYear,consumedMonth,note,price:get('price')||'0'};
+}
+
+// ===== UPLOAD HANDLING =====
+let wines=[];
+const dropZone=document.getElementById('drop-zone');
+const csvInput=document.getElementById('csv-input');
+const uploadError=document.getElementById('upload-error');
+
+dropZone.addEventListener('click',()=>csvInput.click());
+dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.add('dragover')});
+dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop',e=>{e.preventDefault();dropZone.classList.remove('dragover');handleFile(e.dataTransfer.files[0])});
+csvInput.addEventListener('change',e=>handleFile(e.target.files[0]));
+
+function handleFile(file){
+  if(!file)return;
+  uploadError.style.display='none';
+  let reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      let result=parseCSV(e.target.result);
+      if(result.validRows===0)throw new Error('No valid wine entries found. Make sure your CSV has Wine and Country columns.');
+      wines=result.wines;
+      document.getElementById('landing').style.display='none';
+      document.getElementById('app').style.display='block';
+      initApp();
+    }catch(err){
+      uploadError.textContent='Error: '+err.message;
+      uploadError.style.display='block';
+    }
+  };
+  reader.readAsText(file);
+}
+
+function resetApp(){
+  wines=[];
+  document.getElementById('app').style.display='none';
+  document.getElementById('landing').style.display='flex';
+  csvInput.value='';
+}
+
+// ===== CORE APP LOGIC =====
+let map,mapLayerGroup,activeFilters=new Set();
+let climateLayer,elevLayer,satLayer,soilLayer,geoLayer;
+let climateVisible=false,elevVisible=false,satVisible=false,soilVisible=false,geoVisible=false,regionsVisible=false;
+let splitActive=false,map2=null,map2Layers={},regionLayer,regionLayer2=null;
+let countryExpanded=false,varietalExpanded=false;
+
+function getCoords(w){
+  for(let k of [w.appellation,w.subRegion,w.region,w.country]){
+    if(k&&k!=='Unknown'&&GEO[k])return GEO[k];
+  }
+  return null;
+}
+function wineColor(w){
+  let c=(w.color||w.type||'').toLowerCase();
+  if(c.includes('rosé')||c.includes('rose'))return'#d4838f';
+  if(c.includes('white'))return'#d4af37';
+  if(c.includes('orange'))return'#cc7832';
+  return'#8b2252';
+}
+function buildPopupHtml(wineList,title){
+  let html=`<b>${title}</b> — ${wineList.length} wine${wineList.length>1?'s':''}<br><hr>`;
+  wineList.forEach(w=>{
+    html+=`<div class="pw"><div class="pw-name">${w.wine} ${w.vintage||''}</div>`;
+    html+=`<div class="pw-meta">${w.varietal||''} · ${w.type||''} · ${w.consumed||''}</div>`;
+    if(w.note)html+=`<div class="pw-note">"${w.note}"</div>`;
+    html+=`</div>`;
+  });
+  return html;
+}
+
+function rebuildMap(data){
+  mapLayerGroup.clearLayers();
+  let locGroups={};
+  data.forEach(w=>{
+    let coords=getCoords(w);if(!coords)return;
+    let key=coords[0]+','+coords[1];
+    if(!locGroups[key])locGroups[key]={coords,wines:[]};
+    locGroups[key].wines.push(w);
+  });
+  Object.values(locGroups).forEach(g=>{
+    let size=Math.min(8+g.wines.length*1.5,30);
+    let colors={};
+    g.wines.forEach(w=>{let c=wineColor(w);colors[c]=(colors[c]||0)+1});
+    let mainColor=Object.entries(colors).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]))[0][0];
+    let marker=L.circleMarker(g.coords,{radius:size,fillColor:mainColor,color:'#fff',weight:1,opacity:.8,fillOpacity:.7});
+    let region=g.wines[0].appellation!=='Unknown'?g.wines[0].appellation:g.wines[0].subRegion!=='Unknown'?g.wines[0].subRegion:g.wines[0].region;
+    marker.bindPopup(buildPopupHtmlWithTerroir(g.wines,`${region}, ${g.wines[0].country}`,g.coords),{maxWidth:400,maxHeight:500});
+    marker.addTo(mapLayerGroup);
+  });
+}
+
+function matchesFilter(w,filter){
+  if(!filter)return true;let f=filter.toLowerCase();
+  return(w.color||'').toLowerCase().includes(f)||(w.type||'').toLowerCase().includes(f)||(w.masterVarietal||'').toLowerCase().includes(f)||(w.varietal||'').toLowerCase().includes(f);
+}
+function getThemeColors(){
+  if(activeFilters.size===0)return{bg:'#4a5568',border:'#718096',cls:'fill-neutral'};
+  let filtered=getFiltered();let colors={red:0,white:0,rose:0};
+  filtered.forEach(w=>{let c=(w.color||w.type||'').toLowerCase();if(c.includes('rosé')||c.includes('rose'))colors.rose++;else if(c.includes('white'))colors.white++;else colors.red++});
+  if(colors.white>colors.red&&colors.white>colors.rose)return{bg:'#8b7a0c',border:'#d4af37',cls:'fill-white'};
+  if(colors.rose>colors.red&&colors.rose>colors.white)return{bg:'#9e4a5a',border:'#e8a0b0',cls:'fill-rose'};
+  return{bg:'#722f37',border:'#a94442',cls:'fill-red'};
+}
+function applyTheme(){let t=getThemeColors();document.documentElement.style.setProperty('--accent-bg',t.bg);document.documentElement.style.setProperty('--accent-border',t.border)}
+function getFiltered(){
+  if(activeFilters.size===0)return wines;
+  return wines.filter(w=>{for(let f of activeFilters){if(matchesFilter(w,f))return true}return false});
+}
+function filterColorClass(f){
+  let fl=f.toLowerCase();
+  if(fl==='all')return'active-neutral';if(fl==='red')return'active-red';if(fl==='white')return'active-white';if(fl==='rosé'||fl==='rose')return'active-rose';
+  let matched=wines.filter(w=>matchesFilter(w,f));let rc=0,wc=0,roc=0;
+  matched.forEach(w=>{let c=(w.color||w.type||'').toLowerCase();if(c.includes('rosé')||c.includes('rose'))roc++;else if(c.includes('white'))wc++;else rc++});
+  if(wc>rc&&wc>roc)return'active-white';if(roc>rc&&roc>wc)return'active-rose';if(rc>0)return'active-red';return'active-neutral';
+}
+function makeBar(label,count,max,cls,onclick){
+  return`<div class="bar-row" style="cursor:pointer" onclick="${onclick}"><span class="bar-label" title="${label}">${label}</span><div class="bar-track"><div class="bar-fill ${cls}" style="width:${(count/max*100).toFixed(1)}%"></div></div><span class="bar-count">${count}</span></div>`;
+}
+function escHtml(s){return s.replace(/'/g,"\\'").replace(/"/g,'&quot;')}
+
+function showBarPopup(wineList,title){
+  let panel=document.getElementById('detail-panel');
+  let html=`<button class="close-btn" onclick="hideDetail()">✕</button><h4>${title} — ${wineList.length} wine${wineList.length>1?'s':''}</h4>`;
+  wineList.forEach(w=>{html+=`<div class="dp-wine"><div class="dp-name">${w.wine} ${w.vintage||''}</div><div class="dp-meta">${w.varietal||''} · ${w.type||''} · ${w.consumed||''}</div>${w.note?`<div class="dp-note">"${w.note}"</div>`:''}</div>`});
+  panel.innerHTML=html;panel.style.display='block';panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function hideDetail(){document.getElementById('detail-panel').style.display='none'}
+function showCountry(c){showBarPopup(getFiltered().filter(w=>(w.country||'')==c),c)}
+function showVarietal(v){showBarPopup(getFiltered().filter(w=>(w.masterVarietal||w.varietal||'')==v),v)}
+function showMonth(key){showBarPopup((window._monthWines||{})[key]||[],key.replace('-','/'))}
+
+function updateCharts(){
+  let data=getFiltered();let theme=getThemeColors();
+  // Country
+  let countries={};data.forEach(w=>{let c=w.country||'?';countries[c]=(countries[c]||0)+1});
+  let cAll=Object.entries(countries).sort((a,b)=>b[1]-a[1]);
+  let cSorted=countryExpanded?cAll:cAll.slice(0,10);let cMax=cAll[0]?cAll[0][1]:1;
+  let cHtml=cSorted.map(([k,v])=>makeBar(k,v,cMax,theme.cls,`showCountry('${escHtml(k)}')`)).join('');
+  if(cAll.length>10)cHtml+=`<div style="text-align:center;margin-top:6px"><button style="background:none;border:none;color:#888;cursor:pointer;font-size:11px;text-decoration:underline" onclick="countryExpanded=!countryExpanded;updateCharts()">${countryExpanded?'Show top 10':'Show all ('+cAll.length+')'}</button></div>`;
+  document.getElementById('c-country').innerHTML=cHtml;
+  // Varietal
+  let vars={};data.forEach(w=>{let v=w.masterVarietal||w.varietal||'?';vars[v]=(vars[v]||0)+1});
+  let vAll=Object.entries(vars).sort((a,b)=>b[1]-a[1]);
+  let vSorted=varietalExpanded?vAll:vAll.slice(0,10);let vMax=vAll[0]?vAll[0][1]:1;
+  let vHtml=vSorted.map(([k,v])=>{
+    let vw=data.filter(w=>(w.masterVarietal||w.varietal||'')==k);let rc=0,wc=0,roc=0;
+    vw.forEach(w=>{let c=(w.color||w.type||'').toLowerCase();if(c.includes('rosé')||c.includes('rose'))roc++;else if(c.includes('white'))wc++;else rc++});
+    let cls=wc>rc&&wc>roc?'fill-white':roc>rc&&roc>wc?'fill-rose':rc>0?'fill-red':'fill-neutral';
+    return makeBar(k,v,vMax,cls,`showVarietal('${escHtml(k)}')`);
+  }).join('');
+  if(vAll.length>10)vHtml+=`<div style="text-align:center;margin-top:6px"><button style="background:none;border:none;color:#888;cursor:pointer;font-size:11px;text-decoration:underline" onclick="varietalExpanded=!varietalExpanded;updateCharts()">${varietalExpanded?'Show top 10':'Show all ('+vAll.length+')'}</button></div>`;
+  document.getElementById('c-varietal').innerHTML=vHtml;
+  // Timeline
+  let months={};let monthWines={};
+  data.forEach(w=>{let y=w.consumedYear,m=w.consumedMonth;if(!y||!m)return;let key=y+'-'+(m.length<2?'0'+m:m);months[key]=(months[key]||0)+1;if(!monthWines[key])monthWines[key]=[];monthWines[key].push(w)});
+  window._monthWines=monthWines;
+  let mSorted=Object.entries(months).sort((a,b)=>a[0].localeCompare(b[0]));let mMax=Math.max(...mSorted.map(x=>x[1]),1);
+  let bars='',labels='';
+  mSorted.forEach(([k,v])=>{let[y,m]=k.split('-');let label=m+'/'+y.slice(2);let pct=(v/mMax*100).toFixed(1);
+    bars+=`<div class="tl-bar ${theme.cls}" style="height:${pct}%" onclick="showMonth('${k}')"><span class="tip">${label}: ${v} wines</span></div>`;
+    labels+=`<span>${mSorted.length<=24?label:''}</span>`;
+  });
+  document.getElementById('c-timeline').innerHTML=`<div class="tl">${bars}</div><div class="tl-labels">${labels}</div>`;
+  let filterLabel=activeFilters.size===0?'All types':[...activeFilters].join(', ');
+  document.getElementById('stats').textContent=`${data.length} wines · ${Object.keys(countries).length} countries · ${filterLabel}`;
+}
+
+function updateAll(){let filtered=getFiltered();rebuildMap(filtered);if(splitActive)rebuildMap2(filtered);updateCharts()}
+
+// ===== OVERLAYS =====
+function syncOverlayToMap2(name,visible){
+  if(!map2)return;
+  if(visible){if(!map2Layers[name])map2Layers[name]=createMap2Layer(name);if(map2Layers[name])map2Layers[name].addTo(map2)}
+  else{if(map2Layers[name]){map2.removeLayer(map2Layers[name]);delete map2Layers[name]}}
+}
+function createMap2Layer(name){
+  let layers={
+    'climate':()=>L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}',{opacity:0.5,maxZoom:8}),
+    'elev':()=>L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{opacity:0.55,maxZoom:17}),
+    'sat':()=>L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{opacity:0.7,maxZoom:19}),
+    'soil':()=>L.tileLayer.wms('https://maps.isric.org/mapserv?map=/map/wrb.map',{layers:'MostProbable',format:'image/png',transparent:true,opacity:0.5}),
+    'geo':()=>L.tileLayer('https://tiles.macrostrat.org/carto/{z}/{x}/{y}.png',{opacity:0.45,maxZoom:18}),
+  };
+  return layers[name]?layers[name]():null;
+}
+function syncAllOverlaysToMap2(){
+  if(!map2)return;
+  [['climate',climateVisible],['elev',elevVisible],['sat',satVisible],['soil',soilVisible],['geo',geoVisible]].forEach(([n,v])=>{
+    if(v&&!map2Layers[n]){map2Layers[n]=createMap2Layer(n);if(map2Layers[n])map2Layers[n].addTo(map2)}
+  });
+}
+function toggleClimate(){climateVisible=!climateVisible;let b=document.getElementById('climate-toggle');if(climateVisible){climateLayer.addTo(map);b.classList.add('active')}else{map.removeLayer(climateLayer);b.classList.remove('active')}syncOverlayToMap2('climate',climateVisible)}
+function toggleElevation(){elevVisible=!elevVisible;let b=document.getElementById('elev-toggle');if(elevVisible){elevLayer.addTo(map);b.classList.add('active')}else{map.removeLayer(elevLayer);b.classList.remove('active')}syncOverlayToMap2('elev',elevVisible)}
+function toggleSatellite(){satVisible=!satVisible;let b=document.getElementById('sat-toggle');if(satVisible){satLayer.addTo(map);b.classList.add('active')}else{map.removeLayer(satLayer);b.classList.remove('active')}syncOverlayToMap2('sat',satVisible)}
+function toggleSoil(){soilVisible=!soilVisible;let b=document.getElementById('soil-toggle');if(soilVisible){soilLayer.addTo(map);b.classList.add('active')}else{map.removeLayer(soilLayer);b.classList.remove('active')}syncOverlayToMap2('soil',soilVisible)}
+function toggleGeology(){geoVisible=!geoVisible;let b=document.getElementById('geo-toggle');if(geoVisible){geoLayer.addTo(map);b.classList.add('active')}else{map.removeLayer(geoLayer);b.classList.remove('active')}syncOverlayToMap2('geo',geoVisible)}
+
+// ===== REGIONS =====
+const REGIONS=[
+{name:"Napa Valley",lat:38.50,lng:-122.27,zoom:8},{name:"Sonoma",lat:38.52,lng:-122.81,zoom:8},
+{name:"Paso Robles",lat:35.63,lng:-120.69,zoom:9},{name:"Santa Barbara",lat:34.71,lng:-119.99,zoom:9},
+{name:"Willamette Valley",lat:45.07,lng:-123.07,zoom:8},{name:"Columbia Valley",lat:46.5,lng:-119.5,zoom:8},
+{name:"Burgundy",lat:47.04,lng:4.84,zoom:7},{name:"Bordeaux",lat:44.84,lng:-0.58,zoom:8},
+{name:"Champagne",lat:49.25,lng:3.96,zoom:8},{name:"Rhône Valley",lat:44.50,lng:4.81,zoom:7},
+{name:"Loire Valley",lat:47.38,lng:0.69,zoom:7},{name:"Alsace",lat:48.20,lng:7.35,zoom:8},
+{name:"Languedoc",lat:43.61,lng:3.88,zoom:8},{name:"Provence",lat:43.50,lng:6.20,zoom:8},
+{name:"Mosel",lat:49.73,lng:6.63,zoom:8},{name:"Rheingau",lat:50.02,lng:8.05,zoom:9},
+{name:"Pfalz",lat:49.35,lng:8.15,zoom:9},
+{name:"Piedmont",lat:44.69,lng:8.04,zoom:8},{name:"Tuscany",lat:43.35,lng:11.32,zoom:8},
+{name:"Veneto",lat:45.44,lng:10.99,zoom:8},{name:"Sicily",lat:37.60,lng:14.27,zoom:8},
+{name:"Rioja",lat:42.47,lng:-2.45,zoom:8},{name:"Ribera del Duero",lat:41.65,lng:-3.70,zoom:9},
+{name:"Priorat",lat:41.20,lng:0.85,zoom:9},
+{name:"Douro",lat:41.16,lng:-7.79,zoom:8},{name:"Alentejo",lat:38.57,lng:-7.91,zoom:8},
+{name:"Barossa",lat:-34.56,lng:138.95,zoom:9},{name:"McLaren Vale",lat:-35.22,lng:138.55,zoom:9},
+{name:"Margaret River",lat:-33.95,lng:115.08,zoom:9},{name:"Hunter Valley",lat:-32.75,lng:151.15,zoom:9},
+{name:"Marlborough",lat:-41.52,lng:173.95,zoom:9},{name:"Central Otago",lat:-45.03,lng:169.20,zoom:9},
+{name:"Mendoza",lat:-32.89,lng:-68.83,zoom:8},{name:"Casablanca",lat:-33.32,lng:-71.41,zoom:9},
+{name:"Stellenbosch",lat:-33.93,lng:18.86,zoom:9},{name:"Swartland",lat:-33.45,lng:18.75,zoom:9},
+];
+
+function buildRegionLayer(){
+  let lg=L.layerGroup();
+  REGIONS.forEach(r=>{let l=L.marker([r.lat,r.lng],{icon:L.divIcon({className:'region-label',html:r.name,iconSize:[null,null]})});l._minZoom=r.zoom;lg.addLayer(l)});
+  return lg;
+}
+function toggleRegions(){
+  regionsVisible=!regionsVisible;let b=document.getElementById('region-toggle');
+  if(regionsVisible){regionLayer.addTo(map);b.classList.add('active');updateRegionVis(map,regionLayer);
+    if(map2){if(!regionLayer2)regionLayer2=buildRegionLayer();regionLayer2.addTo(map2);map2.off('zoomend',()=>updateRegionVis(map2,regionLayer2));map2.on('zoomend',()=>updateRegionVis(map2,regionLayer2));setTimeout(()=>updateRegionVis(map2,regionLayer2),200)}
+  }else{map.removeLayer(regionLayer);b.classList.remove('active');if(map2&&regionLayer2){map2.removeLayer(regionLayer2);regionLayer2=null}}
+}
+function updateRegionVis(m,layer){if(!regionsVisible||!layer)return;let z=m.getZoom();layer.eachLayer(l=>{let el=l.getElement&&l.getElement();if(!el)return;el.style.opacity=z>=(l._minZoom-1)?'1':'0'})}
+
+// ===== SPLIT VIEW =====
+function rebuildMap2(data){
+  if(!map2)return;map2.eachLayer(l=>{if(l instanceof L.CircleMarker)map2.removeLayer(l)});
+  let locGroups={};data.forEach(w=>{let coords=getCoords(w);if(!coords)return;let key=coords[0]+','+coords[1];if(!locGroups[key])locGroups[key]={coords,wines:[]};locGroups[key].wines.push(w)});
+  Object.values(locGroups).forEach(g=>{
+    let size=Math.min(8+g.wines.length*1.5,30);let colors={};g.wines.forEach(w=>{let c=wineColor(w);colors[c]=(colors[c]||0)+1});
+    let mainColor=Object.entries(colors).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]))[0][0];
+    let marker=L.circleMarker(g.coords,{radius:size,fillColor:mainColor,color:'#fff',weight:1,opacity:.8,fillOpacity:.7});
+    let region=g.wines[0].appellation!=='Unknown'?g.wines[0].appellation:g.wines[0].subRegion!=='Unknown'?g.wines[0].subRegion:g.wines[0].region;
+    marker.bindPopup(buildPopupHtmlWithTerroir(g.wines,`${region}, ${g.wines[0].country}`,g.coords),{maxWidth:400,maxHeight:500});marker.addTo(map2);
+  });
+}
+function toggleSplit(){
+  splitActive=!splitActive;let b=document.getElementById('split-toggle');let wrapper=document.getElementById('map-wrapper');
+  let mapDiv=document.getElementById('map');let map2Div=document.getElementById('map2');
+  if(splitActive){
+    b.classList.add('active');wrapper.classList.add('split-active');
+    if(!wrapper.classList.contains('fullscreen')){mapDiv.style.width='50%';mapDiv.style.display='inline-block';map2Div.style.display='inline-block';map2Div.style.width='50%';map2Div.style.height='50vh';map2Div.style.verticalAlign='top';mapDiv.style.verticalAlign='top'}
+    setTimeout(()=>{map.invalidateSize();if(!map2){map2=L.map('map2',{scrollWheelZoom:true}).setView([46,2],5);L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:18}).addTo(map2);rebuildMap2(getFiltered());syncAllOverlaysToMap2();setupMapClickHandler(map2);
+      if(regionsVisible){if(!regionLayer2)regionLayer2=buildRegionLayer();regionLayer2.addTo(map2);map2.on('zoomend',()=>updateRegionVis(map2,regionLayer2));setTimeout(()=>updateRegionVis(map2,regionLayer2),200)}
+    }else map2.invalidateSize()},150);
+  }else{
+    b.classList.remove('active');wrapper.classList.remove('split-active');
+    if(!wrapper.classList.contains('fullscreen')){mapDiv.style.width='100%';mapDiv.style.display='block';map2Div.style.display='none'}else{map2Div.style.display='none';mapDiv.style.width='';mapDiv.style.display=''}
+    if(map2){map2.remove();map2=null;map2Layers={};regionLayer2=null}setTimeout(()=>map.invalidateSize(),100);
+  }
+}
+function toggleFullscreen(){
+  let el=document.getElementById('map-wrapper');let b=document.getElementById('fs-btn');
+  if(el.classList.contains('fullscreen')){el.classList.remove('fullscreen');b.textContent='⛶';
+    if(splitActive){let md=document.getElementById('map');let m2=document.getElementById('map2');md.style.width='50%';md.style.display='inline-block';md.style.verticalAlign='top';m2.style.display='inline-block';m2.style.width='50%';m2.style.height='50vh';m2.style.verticalAlign='top'}
+  }else{el.classList.add('fullscreen');b.textContent='✕';syncAllFsOverlayButtons()}
+  setTimeout(()=>{map.invalidateSize();if(map2)map2.invalidateSize()},150);
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){let el=document.getElementById('map-wrapper');if(el.classList.contains('fullscreen'))toggleFullscreen()}});
+
+// ===== SEARCH =====
+let searchTerm='',_searchTimer=null;
+function doSearch(val){
+  searchTerm=val.trim().toLowerCase();document.getElementById('search-clear').style.display=searchTerm?'block':'none';
+  clearTimeout(_searchTimer);_searchTimer=setTimeout(()=>{
+    if(searchTerm){
+      let results=wines.filter(w=>(w.wine||'').toLowerCase().includes(searchTerm)||(w.varietal||'').toLowerCase().includes(searchTerm)||(w.country||'').toLowerCase().includes(searchTerm)||(w.region||'').toLowerCase().includes(searchTerm)||(w.appellation||'').toLowerCase().includes(searchTerm)||(w.note||'').toLowerCase().includes(searchTerm)||(w.vintage||'').includes(searchTerm));
+      rebuildMap(results);
+      if(splitActive)rebuildMap2(results);      let panel=document.getElementById('detail-panel');
+      let html=`<button class="close-btn" onclick="hideDetail()">✕</button><h4>Search: "${val.trim()}" — ${results.length} result${results.length!==1?'s':''}</h4>`;
+      results.forEach(w=>{html+=`<div class="dp-wine"><div class="dp-name">${w.wine} ${w.vintage||''}</div><div class="dp-meta">${w.varietal||''} · ${w.type||''} · ${w.consumed||''}</div>${w.note?`<div class="dp-note">"${w.note}"</div>`:''}</div>`});
+      panel.innerHTML=html;panel.style.display='block';
+    }else{updateAll();hideDetail()}
+  },300);
+}
+function clearSearch(){document.getElementById('wine-search').value='';doSearch('')}
+
+// ===== FULLSCREEN CONTROLS =====
+function toggleFsControls(){
+  let body=document.getElementById('fs-ctrl-body');let btn=document.getElementById('fs-ctrl-toggle');
+  if(body.style.display==='none'){body.style.display='flex';btn.textContent='▼ Controls'}else{body.style.display='none';btn.textContent='▶ Controls'}
+}
+function fsFilter(f){
+  if(activeFilters.has(f))activeFilters.delete(f);else activeFilters.add(f);
+  if(window._buildFilters)window._buildFilters();applyTheme();updateAll();
+}
+function syncFsBtn(el,mainId){let mainBtn=document.getElementById(mainId);el.classList.toggle('active',mainBtn.classList.contains('active'))}
+function syncAllFsOverlayButtons(){
+  let fsButtons=document.querySelectorAll('#fs-ctrl-body .region-toggle');
+  let mainButtons=document.querySelectorAll('.search-bar .region-toggle');
+  mainButtons.forEach(mainBtn=>{fsButtons.forEach(fsBtn=>{if(fsBtn.textContent.trim()===mainBtn.textContent.trim())fsBtn.classList.toggle('active',mainBtn.classList.contains('active'))})});
+}
+
+// ===== GEO/SOIL CLICK HANDLER =====
+function hideGeoInfo(){document.getElementById('geo-info').style.display='none'}
+
+const SOIL_WINE_INFO={
+  'Calcisols':'Limestone/chalk — classic terroir for Champagne, Burgundy, Loire. Excellent drainage, mineral character.',
+  'Leptosols':'Thin rocky soils over bedrock. Vines root deep — concentrated, mineral-driven wines.',
+  'Cambisols':'Versatile, well-balanced drainage and nutrients. Found across many quality wine regions.',
+  'Luvisols':'Clay-rich subsoil with good drainage. Retains moisture — excellent for structured reds.',
+  'Arenosols':'Sandy — good drainage, low fertility. Produces elegant, aromatic wines.',
+  'Fluvisols':'River/alluvial — rich and fertile. Best when gravel content is high.',
+  'Regosols':'Unconsolidated mineral soils. Variable for wine depending on parent material.',
+  'Phaeozems':'Dark, humus-rich prairie soils. Fertile — can produce vigorous vines.',
+  'Kastanozems':'Chestnut steppe soils. Moderate fertility, balanced vine growth.',
+  'Vertisols':'Heavy swelling clay. Challenging drainage but powerful wines in warm climates.',
+  'Andosols':'Volcanic ash — good drainage, mineral character.',
+  'Chernozems':'Black humus-rich steppe — very fertile.',
+  'Alisols':'Acidic clay — challenging, requires careful management.',
+  'Acrisols':'Acidic weathered tropical clay.',
+  'Ferralsols':'Iron-rich tropical soils. Rarely used for wine.',
+  'Podzols':'Leached, acidic forest soils.',
+  'Gleysols':'Waterlogged soils.',
+  'Histosols':'Organic/peat soils.',
+  'Planosols':'Abrupt clay increase causing waterlogging.',
+  'Nitisols':'Deep, red, well-drained tropical soils.',
+  'Stagnosols':'Periodically waterlogged.',
+};
+
+function setupMapClickHandler(targetMap){
+  targetMap.on('click',async function(e){
+    if(!geoVisible&&!soilVisible)return;
+    let lat=e.latlng.lat.toFixed(4),lng=e.latlng.lng.toFixed(4);
+    let panel=document.getElementById('geo-info'),content=document.getElementById('geo-content');
+    content.innerHTML='<i>Loading...</i>';panel.style.display='block';
+    let sections=[];
+    if(geoVisible){
+      try{
+        let resp=await fetch(`https://macrostrat.org/api/geologic_units/map?lat=${lat}&lng=${lng}&response=long`);
+        let data=await resp.json();
+        if(data.success&&data.success.data&&data.success.data.length>0){
+          let u=data.success.data[0];
+          let html=`<h5>🪨 ${u.strat_name||u.name||'Unknown Formation'}</h5>`;
+          html+=`<b>Lithology:</b> ${u.lith||u.liths||'Unknown'}<br>`;
+          html+=`<b>Age:</b> ${u.t_age||'?'} – ${u.b_age||'?'} Ma`;
+          if(u.t_period)html+=` (${u.t_period})`;html+=`<br>`;
+          if(u.descrip)html+=`<b>Description:</b> ${u.descrip}<br>`;
+          sections.push(html);
+        }else sections.push('<h5>🪨 No geology data</h5>');
+      }catch(err){sections.push(`<h5>🪨 Error</h5><span style="color:#888">${err.message}</span>`)}
+    }
+    if(soilVisible){
+      try{
+        let bounds=targetMap.getBounds(),size=targetMap.getSize(),point=targetMap.latLngToContainerPoint(e.latlng);
+        let bbox=`${bounds.getSouthWest().lng},${bounds.getSouthWest().lat},${bounds.getNorthEast().lng},${bounds.getNorthEast().lat}`;
+        let url=`https://maps.isric.org/mapserv?map=/map/wrb.map&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetFeatureInfo&LAYERS=MostProbable&QUERY_LAYERS=MostProbable&STYLES=default&INFO_FORMAT=application/geo%2Bjson&SRS=EPSG:4326&BBOX=${bbox}&WIDTH=${size.x}&HEIGHT=${size.y}&X=${Math.round(point.x)}&Y=${Math.round(point.y)}`;
+        let resp=await fetch(url);let data=await resp.json();
+        if(data.features&&data.features.length>0){
+          let soilClass=data.features[0].properties.pixel_value||'Unknown';
+          let wineInfo=SOIL_WINE_INFO[soilClass]||'';
+          let html=`<h5>🌱 Soil: ${soilClass}</h5>`;
+          if(wineInfo)html+=`<div style="margin:4px 0;padding:4px 8px;background:rgba(139,105,20,.15);border-left:2px solid #8b6914;font-size:11px;color:#d4af37">${wineInfo}</div>`;
+          sections.push(html);
+        }else sections.push('<h5>🌱 No soil data</h5>');
+      }catch(err){sections.push(`<h5>🌱 Soil error</h5><span style="color:#888">${err.message}</span>`)}
+    }
+    content.innerHTML=sections.join('<hr style="border-color:#444;margin:6px 0">')+`<br><span style="color:#888;font-size:11px">${lat}, ${lng}</span>`;
+  });
+}
+
+// ===== LIVE TERROIR FETCH =====
+// Fetches geology + soil for a location on demand (for popup terroir section)
+let terroirCache={};
+async function fetchTerroir(lat,lng){
+  let key=`${lat.toFixed(2)},${lng.toFixed(2)}`;
+  if(terroirCache[key])return terroirCache[key];
+  let parts=[];
+  try{
+    let resp=await fetch(`https://macrostrat.org/api/geologic_units/map?lat=${lat}&lng=${lng}&response=long`);
+    let data=await resp.json();
+    if(data.success&&data.success.data&&data.success.data.length>0){
+      let u=data.success.data[0];let lith=u.lith||u.liths||'Unknown';
+      if(lith.length>60){let m=lith.match(/Major:\{([^}]+)\}/);if(m)lith=m[1];else lith=lith.substring(0,57)+'...'}
+      parts.push(`Bedrock: ${lith}${u.t_period?' ('+u.t_period+')':''}.`);
+    }
+  }catch(e){}
+  try{
+    let d=0.5,bbox=`${lng-d},${lat-d},${lng+d},${lat+d}`;
+    let url=`https://maps.isric.org/mapserv?map=/map/wrb.map&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetFeatureInfo&LAYERS=MostProbable&QUERY_LAYERS=MostProbable&STYLES=default&INFO_FORMAT=application/geo%2Bjson&SRS=EPSG:4326&BBOX=${bbox}&WIDTH=256&HEIGHT=256&X=128&Y=128`;
+    let resp=await fetch(url);let data=await resp.json();
+    if(data.features&&data.features.length>0){
+      let soil=data.features[0].properties.pixel_value||'';
+      let desc=SOIL_WINE_INFO[soil]||'';
+      if(soil)parts.push(`Soil: ${soil}${desc?' — '+desc:''}`);
+    }
+  }catch(e){}
+  let result=parts.length>0?parts.join(' '):null;
+  terroirCache[key]=result;
+  return result;
+}
+
+// Enhanced popup that fetches terroir on open
+function buildPopupHtmlWithTerroir(wineList,title,coords){
+  let id='terroir-'+Math.random().toString(36).substr(2,6);
+  let html=`<b>${title}</b> — ${wineList.length} wine${wineList.length>1?'s':''}<br>`;
+  html+=`<div id="${id}" style="margin:4px 0 8px;padding:5px 8px;background:#f5f0e0;border-left:3px solid #8b6914;font-size:11px;color:#555;line-height:1.4;display:none"><b style="color:#6b4f1d">🌍 Terroir</b><br><i>Loading...</i></div>`;
+  html+=`<hr>`;
+  wineList.forEach(w=>{
+    html+=`<div class="pw"><div class="pw-name">${w.wine} ${w.vintage||''}</div>`;
+    html+=`<div class="pw-meta">${w.varietal||''} · ${w.type||''} · ${w.consumed||''}</div>`;
+    if(w.note)html+=`<div class="pw-note">"${w.note}"</div>`;
+    html+=`</div>`;
+  });
+  // Trigger async terroir fetch
+  if(coords){
+    setTimeout(async()=>{
+      let el=document.getElementById(id);if(!el)return;
+      let terroir=await fetchTerroir(coords[0],coords[1]);
+      if(terroir){el.innerHTML=`<b style="color:#6b4f1d">🌍 Terroir</b><br>${terroir}`;el.style.display='block'}
+      else el.remove();
+    },100);
+  }
+  return html;
+}
+
+// ===== INIT =====
+function initApp(){
+  // Init map
+  if(map)map.remove();
+  map=L.map('map',{scrollWheelZoom:true}).setView([30,0],2);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'©OpenStreetMap ©CARTO',maxZoom:18}).addTo(map);
+  mapLayerGroup=L.layerGroup().addTo(map);
+  // Overlay layers
+  climateLayer=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}',{opacity:0.5,maxZoom:8});
+  elevLayer=L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{opacity:0.55,maxZoom:17});
+  satLayer=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{opacity:0.7,maxZoom:19});
+  soilLayer=L.tileLayer.wms('https://maps.isric.org/mapserv?map=/map/wrb.map',{layers:'MostProbable',format:'image/png',transparent:true,opacity:0.5});
+  geoLayer=L.tileLayer('https://tiles.macrostrat.org/carto/{z}/{x}/{y}.png',{opacity:0.45,maxZoom:18});
+  regionLayer=buildRegionLayer();
+  map.on('zoomend',()=>updateRegionVis(map,regionLayer));
+  setupMapClickHandler(map);
+  // Build filters
+  let varCounts={};wines.forEach(w=>{let v=w.masterVarietal||w.varietal;if(v&&v!=='Unknown'&&v!=='?')varCounts[v]=(varCounts[v]||0)+1});
+  let allVarietals=Object.entries(varCounts).sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
+  let topVarietals=allVarietals.slice(0,7);let extraVarietals=allVarietals.slice(7);let filtersExpanded=false;
+  window._buildFilters=function(){
+    let filterDiv=document.getElementById('filters');filterDiv.innerHTML='';
+    let items=['All','Red','White','Rosé',...(filtersExpanded?[...allVarietals].sort((a,b)=>a.localeCompare(b)):topVarietals)];
+    items.forEach(f=>{
+      let btn=document.createElement('button');let isActive=f==='All'?activeFilters.size===0:activeFilters.has(f);
+      btn.className='fbtn'+(isActive?' active '+filterColorClass(f):'');btn.textContent=f;
+      btn.onclick=()=>{if(f==='All')activeFilters.clear();else{if(activeFilters.has(f))activeFilters.delete(f);else activeFilters.add(f)}window._buildFilters();applyTheme();updateAll()};
+      filterDiv.appendChild(btn);
+    });
+    if(extraVarietals.length>0){let t=document.createElement('button');t.className='fbtn';t.style.cssText='border-style:dashed;color:#888';t.textContent=filtersExpanded?'Less ▴':'More ▾';t.onclick=()=>{filtersExpanded=!filtersExpanded;window._buildFilters()};filterDiv.appendChild(t)}
+  };
+  window._buildFilters();
+  applyTheme();rebuildMap(wines);updateCharts();
+}
+</script>
+
+</body>
+</html>
