@@ -2,7 +2,7 @@
 
 Visualize your wine collection on an interactive world map with terroir overlays, tasting notes, and charts.
 
-**[Try it here →](https://jonlev03.github.io/CellarMapper/)**
+**[Try it here →](https://githwwb.github.io/CellarMapper/)**
 
 ## Features
 - Upload a CSV from CellarTracker, Vivino, or any wine app
