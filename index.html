@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CellarMapper — Visualize Your Wine Collection</title>
+<meta name="description" content="Upload your CellarTracker or Vivino CSV and explore your wines on an interactive world map with geology, soil, climate overlays, terroir descriptions, and tasting notes.">
+<meta property="og:title" content="CellarMapper — Visualize Your Wine Collection">
+<meta property="og:description" content="Interactive wine map with terroir overlays, split view, and charts. Upload your CSV and explore.">
+<meta property="og:image" content="preview.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="CellarMapper">
+<meta name="twitter:description" content="Visualize your wine collection on an interactive world map with geology, soil, and climate overlays.">
+<meta name="twitter:image" content="preview.png">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
@@ -101,6 +110,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <div id="landing">
 <h2>CellarMapper</h2>
 <p>Visualize your wine collection on an interactive world map with terroir overlays, tasting notes, and charts.</p>
+<img src="preview.png" alt="CellarMapper preview showing wine regions with geology overlay" style="width:100%;max-width:600px;border-radius:8px;border:1px solid #333;margin-bottom:24px;display:none" id="preview-img" onload="this.style.display='block'" onerror="this.style.display='none'">
 <div class="drop-zone" id="drop-zone">
 <h3>Drop your CSV here</h3>
 <p>or click to browse</p>
