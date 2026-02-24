@@ -40,7 +40,3 @@ Visualize your wine collection on an interactive world map with terroir overlays
 
 ## License
 MIT
-
----
-
-<a href="https://www.buymeacoffee.com/Jon.L" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
