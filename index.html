@@ -381,6 +381,8 @@ function buildColumnMap(headerLower,format){
   m.appellation=find(['appellation','designation','aoc','doc','ava']);
   m.vineyard=find(['vineyard']);
   m.consumed=find(['consumed','date consumed','date tasted','date','tasting date']);
+  m.consumedYear=find(['consumedyear','consumed year','consumed_year']);
+  m.consumedMonth=find(['consumedmonth','consumed month','consumed_month']);
   m.note=find(['consumptionnote','consumption note','tasting note','tasting notes','note','notes','review','my review']);
   m.price=find(['price','cost']);
   m.rating=find(['rating','my rating','score','user rating']);
@@ -401,12 +403,17 @@ function mapRow(vals,colMap,headerLower){
   let appellation=get('appellation');
   let consumed=get('consumed');
   let note=get('note');
-  // Parse consumed date
-  let consumedYear='',consumedMonth='';
-  if(consumed){
-    let dp=consumed.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
-    if(dp){consumedMonth=dp[1];consumedYear=dp[3].length===2?'20'+dp[3]:dp[3]}
-    else{let dp2=consumed.match(/(\d{4})[\/\-](\d{1,2})/);if(dp2){consumedYear=dp2[1];consumedMonth=dp2[2]}}
+  // Parse consumed date — use direct year/month columns if available
+  let consumedYear=get('consumedYear'),consumedMonth=get('consumedMonth');
+  if(!consumedYear&&consumed){
+    // Try YYYY-MM-DD first (ISO format)
+    let dp2=consumed.match(/^(\d{4})[\/\-](\d{1,2})/);
+    if(dp2){consumedYear=dp2[1];consumedMonth=dp2[2]}
+    else{
+      // Try MM/DD/YYYY or M/D/YY
+      let dp=consumed.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+      if(dp){consumedMonth=dp[1];consumedYear=dp[3].length===2?'20'+dp[3]:dp[3]}
+    }
   }
   return{wine,vintage,type:type||'Unknown',color:color||type||'Unknown',category:get('category')||'',
     varietal:varietal||'Unknown',masterVarietal:masterVarietal||varietal||'Unknown',
