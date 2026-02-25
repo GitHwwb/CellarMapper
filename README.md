@@ -26,11 +26,11 @@ Visualize your wine collection on an interactive world map with terroir overlays
 
 ## How to Export Your Data
 
-**CellarTracker:** Follow the official guide: [Exporting Data from CellarTracker](https://support.cellartracker.com/article/29-exporting-data)
+**CellarTracker** *(recommended — richest data)*: Follow the official guide: [Exporting Data from CellarTracker](https://support.cellartracker.com/article/29-exporting-data)
 
-**Vivino:** Use the [Vivino Exporter](https://github.com/sulfo/Vivino-Exporter) browser extension
+**Vivino** *(limited — no tasting notes, type, or appellation)*: Use the [Vivino Exporter](https://github.com/sulfo/Vivino-Exporter) browser extension
 
-**Other apps:** Any CSV with columns like Wine, Vintage, Country, Region, Varietal, Type/Color will work. Unknown columns are handled gracefully.
+**Other apps:** Any CSV works if it has at minimum a `Wine` and `Country` column. Additional supported columns: `Vintage`, `Region`, `SubRegion`, `Appellation`, `Varietal`, `Color`, `Type`, `Consumed`, `Note`. Missing columns are skipped gracefully.
 
 ## Overlays
 

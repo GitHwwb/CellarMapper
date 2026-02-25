@@ -164,12 +164,12 @@ html::-webkit-scrollbar-thumb:hover,body::-webkit-scrollbar-thumb:hover{backgrou
 <details id="upload-info">
 <summary>How to export your data</summary>
 <br>
-<b>CellarTracker:</b><br>
+<b>CellarTracker</b> <span style="color:#d4af37;font-size:11px">(recommended — richest data)</span><br>
 Follow the official guide: <a href="https://support.cellartracker.com/article/29-exporting-data" target="_blank">Exporting Data from CellarTracker</a><br><br>
-<b>Vivino:</b><br>
+<b>Vivino</b> <span style="color:rgba(255,255,255,.35);font-size:11px">(limited — no tasting notes, type, or appellation)</span><br>
 Vivino doesn't have a native export. Use the <a href="https://github.com/sulfo/Vivino-Exporter" target="_blank">Vivino Exporter</a> browser extension to export your wines as CSV, then upload here.<br><br>
-<b>Other apps:</b><br>
-Any CSV with columns like Wine, Vintage, Country, Region, Varietal, Type/Color will work. Missing columns are handled gracefully.
+<b>Other apps</b><br>
+Any CSV works if it has at minimum a <code style="background:rgba(255,255,255,.1);padding:1px 4px;border-radius:3px;font-size:11px">Wine</code> and <code style="background:rgba(255,255,255,.1);padding:1px 4px;border-radius:3px;font-size:11px">Country</code> column. Additional supported columns: <code style="background:rgba(255,255,255,.1);padding:1px 4px;border-radius:3px;font-size:11px">Vintage</code>, <code style="background:rgba(255,255,255,.1);padding:1px 4px;border-radius:3px;font-size:11px">Region</code>, <code style="background:rgba(255,255,255,.1);padding:1px 4px;border-radius:3px;font-size:11px">SubRegion</code>, <code style="background:rgba(255,255,255,.1);padding:1px 4px;border-radius:3px;font-size:11px">Appellation</code>, <code style="background:rgba(255,255,255,.1);padding:1px 4px;border-radius:3px;font-size:11px">Varietal</code>, <code style="background:rgba(255,255,255,.1);padding:1px 4px;border-radius:3px;font-size:11px">Color</code>, <code style="background:rgba(255,255,255,.1);padding:1px 4px;border-radius:3px;font-size:11px">Type</code>, <code style="background:rgba(255,255,255,.1);padding:1px 4px;border-radius:3px;font-size:11px">Consumed</code>, <code style="background:rgba(255,255,255,.1);padding:1px 4px;border-radius:3px;font-size:11px">Note</code>. Missing columns are skipped gracefully.
 </details>
 <div class="landing-bmc"><script type="text/javascript" src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js" data-name="bmc-button" data-slug="Jon.L" data-color="#9196a0" data-emoji="🍷" data-font="Cookie" data-text="Buy me a glass" data-outline-color="#9196a0" data-font-color="#000000" data-coffee-color="#FFDD00" ></script></div>
 </div>
@@ -338,7 +338,7 @@ function parseCSV(text){
   let wines=[];
   for(let i=1;i<lines.length;i++){
     let vals=parseCSVLine(lines[i]);
-    if(vals.length<3)continue;
+    if(vals.length<2)continue;
     let w=mapRow(vals,colMap,headerLower);
     if(w.wine&&w.country)wines.push(w);
   }
