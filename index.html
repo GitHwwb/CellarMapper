@@ -207,9 +207,9 @@ html::-webkit-scrollbar-thumb:hover,body::-webkit-scrollbar-thumb:hover{backgrou
 
 #landing .lp-foot{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;padding:20px 40px;border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-3)}
 #landing .lp-foot .mono{color:var(--ink-2)}
-#landing .bmc-glass{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;border:1px solid rgba(212,175,55,.4);background:rgba(255,255,255,.02);color:var(--ink);font-family:'IBM Plex Mono',monospace;font-size:12.5px;letter-spacing:.01em;text-decoration:none;transition:all .18s ease}
-#landing .bmc-glass:hover{color:var(--gold);border-color:rgba(212,175,55,.65);background:rgba(212,175,55,.08)}
-#landing .bmc-glass .g{font-size:14px;line-height:1}
+.bmc-glass{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;border:1px solid rgba(169,68,66,.6);background:rgba(255,255,255,.02);color:#e8e2d4;font-family:'IBM Plex Mono',monospace;font-size:12.5px;letter-spacing:.01em;text-decoration:none;transition:all .18s ease}
+.bmc-glass:hover{color:#db7e86;border-color:rgba(169,68,66,.95);background:rgba(169,68,66,.12)}
+.bmc-glass .g{font-size:14px;line-height:1}
 
 @media(max-width:980px){#landing .lp-hero{grid-template-columns:1fr;gap:34px}#landing .ex-grid{grid-template-columns:1fr}}
 @media(max-width:560px){#landing .lp-top,#landing .lp-hero,#landing .lp-export,#landing .lp-foot{padding-left:20px;padding-right:20px}#landing .lp-foot{justify-content:center}#landing .landing-bmc{transform-origin:center}}
@@ -299,7 +299,7 @@ html::-webkit-scrollbar-thumb:hover,body::-webkit-scrollbar-thumb:hover{backgrou
 <div class="stats" id="stats"></div>
 <button class="region-toggle" id="split-toggle" onclick="toggleSplit()" style="margin-left:8px;font-size:11px">Split View</button>
 <button class="fbtn" onclick="resetApp()" style="margin-left:8px;font-size:11px;border-style:dashed">New CSV</button>
-<div style="margin-left:auto;transform:scale(0.65);transform-origin:right center" id="header-bmc"><script type="text/javascript" src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js" data-name="bmc-button" data-slug="Jon.L" data-color="#9196a0" data-emoji="🍷" data-font="Cookie" data-text="Buy me a glass" data-outline-color="#9196a0" data-font-color="#000000" data-coffee-color="#FFDD00" ></script></div>
+<a class="bmc-glass" id="header-bmc" href="https://www.buymeacoffee.com/Jon.L" target="_blank" rel="noopener" style="margin-left:auto"><span class="g" aria-hidden="true">🍷</span> Buy me a glass</a>
 </div>
 <div class="filter-bar" id="filters"></div>
 <div class="search-bar">
