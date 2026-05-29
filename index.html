@@ -15,6 +15,9 @@
 <meta name="twitter:image" content="preview.png">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#1a1a2e;color:#e0e0e0;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.15) transparent}
@@ -129,49 +132,162 @@ html::-webkit-scrollbar-thumb:hover,body::-webkit-scrollbar-thumb:hover{backgrou
 #upload-info b{color:rgba(255,255,255,.6)}
 .landing-bmc{margin-top:32px;transform:scale(0.8);transform-origin:center center}
 #app{display:none}
+
+/* ===== Redesigned landing (scoped to #landing so the dashboard is untouched) ===== */
+#landing{
+  --paper:#141b2e;--card:#1a2440;--card-2:#10172a;
+  --ink:#e9e2d4;--ink-2:#a6a18f;--ink-3:#79809a;
+  --line:#26304d;--line-2:#3a466a;--gold:#d4af37;--wine:#a94442;--map-bg:#0d1117;
+  display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;
+  text-align:left;padding:0;min-height:100vh;overflow-x:hidden;
+  background:linear-gradient(180deg,#0d1117 0%,#141b2e 45%,#1a2540 100%);
+  font-family:'Hanken Grotesk',system-ui,sans-serif;color:var(--ink)}
+#landing h1,#landing h2,#landing h3,#landing .wordmark,#landing .ex-name,#landing .mini-pop .nm{
+  font-family:'Fraunces',Georgia,serif;font-weight:500;letter-spacing:-.01em;line-height:1.1}
+#landing .mono,#landing .meta,#landing .ex-cols,#landing .plate-head .t,#landing .plate-head .c,
+#landing .band,#landing .mini-pop .mt,#landing .ex-badge{font-family:'IBM Plex Mono',monospace}
+
+#landing .lp-top{display:flex;align-items:center;justify-content:space-between;padding:22px 40px;border-bottom:1px solid var(--line)}
+#landing .wordmark{font-size:20px;font-weight:500;display:flex;align-items:center;gap:9px}
+#landing .wordmark .dot{width:9px;height:9px;border-radius:50%;background:var(--wine);box-shadow:0 0 0 3px rgba(169,68,66,.2)}
+#landing .meta{font-size:11px;letter-spacing:.18em;color:var(--ink-3)}
+
+#landing .lp-hero{flex:1;display:grid;grid-template-columns:1.05fr .95fr;gap:60px;align-items:center;max-width:1240px;width:100%;margin:0 auto;padding:60px 40px}
+#landing .lp-copy{max-width:560px}
+#landing .lp-copy h1{font-size:clamp(38px,5vw,62px);margin:0;font-weight:400}
+#landing .lp-copy h1 em{font-style:italic;color:var(--gold);font-weight:500}
+#landing .sub{margin-top:22px;font-size:16px;color:var(--ink-2);max-width:460px;line-height:1.62}
+#landing .lp-cta{display:flex;gap:12px;margin-top:30px;flex-wrap:wrap}
+#landing .btn{font-family:'Hanken Grotesk',sans-serif;font-size:13.5px;font-weight:600;padding:11px 20px;border-radius:2px;border:1px solid var(--wine);background:var(--wine);color:#fff;cursor:pointer;transition:transform .18s ease,background .18s ease,box-shadow .18s ease}
+#landing .btn:hover{background:#bb5057;transform:translateY(-1px);box-shadow:0 8px 22px rgba(0,0,0,.3)}
+
+#landing .drop-zone{margin-top:18px;max-width:none;width:100%;border:1.5px dashed var(--line-2);border-radius:4px;padding:20px 22px;cursor:pointer;transition:all .25s ease;background:rgba(255,255,255,.015);text-align:left;backdrop-filter:none}
+#landing .drop-zone:hover,#landing .drop-zone.dragover{border-color:rgba(212,175,55,.5);background:rgba(212,175,55,.05);transform:none;box-shadow:none}
+#landing .drop-zone h3{font-family:'Hanken Grotesk',sans-serif;color:var(--ink);font-size:14px;font-weight:600;margin:0 0 3px}
+#landing .drop-zone p{color:var(--ink-3);font-size:12.5px;margin:0}
+#landing .drop-zone input{display:none}
+#landing #upload-error{color:#e0848a;font-size:13px;margin-top:12px;display:none}
+
+#landing .plate{position:relative;background:var(--map-bg);border:1px solid var(--line-2);border-radius:3px;box-shadow:0 30px 80px -30px rgba(0,0,0,.7);padding:14px;overflow:hidden}
+#landing .plate-head{display:flex;justify-content:space-between;align-items:center;padding:2px 4px 12px;color:#cabfa6}
+#landing .plate-head .t{font-size:10.5px;letter-spacing:.2em;text-transform:uppercase}
+#landing .plate-head .c{font-size:10.5px;color:#7d8a86}
+#landing .strata{border-radius:2px;overflow:hidden;border:1px solid rgba(0,0,0,.35)}
+#landing .band{display:flex;justify-content:space-between;align-items:center;padding:0 13px;color:rgba(20,16,10,.78);font-size:11px;letter-spacing:.04em;position:relative}
+#landing .band .age{opacity:.62;font-size:10px}
+#landing .band.vines{background:repeating-linear-gradient(90deg,#586b3b 0 2px,#62763f 2px 13px);height:30px;color:#e9e6d8}
+#landing .band.vines .lab{display:flex;align-items:center;gap:7px;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase}
+#landing .band.q{background:#d2c49c;height:34px}
+#landing .band.n{background:#c6a472;height:40px}
+#landing .band.pg{background:#b88f5e;height:46px;color:rgba(255,250,240,.85)}
+#landing .band.k{background:#dccfae;height:52px}
+#landing .band.j{background:#9caf93;height:58px;color:rgba(20,16,10,.8)}
+#landing .plate .pin{position:absolute;top:30px;left:64%;width:14px;height:14px;border-radius:50%;background:var(--wine);border:2px solid #faf6ee;box-shadow:0 0 0 1px rgba(0,0,0,.5),0 3px 8px rgba(0,0,0,.5);z-index:3}
+#landing .plate .pin::after{content:'';position:absolute;top:13px;left:50%;width:1px;height:18px;background:rgba(250,246,238,.55);transform:translateX(-.5px)}
+#landing .mini-pop{position:absolute;top:8px;left:18px;width:212px;background:var(--card);border:1px solid var(--line-2);border-radius:3px;padding:11px 13px;box-shadow:0 14px 36px -12px rgba(0,0,0,.6);z-index:4}
+#landing .mini-pop .nm{font-size:14.5px;color:var(--ink);font-weight:500;line-height:1.2}
+#landing .mini-pop .mt{font-size:10.5px;color:var(--ink-3);margin-top:4px;letter-spacing:.02em}
+#landing .mini-pop .terr{font-size:11.5px;color:var(--ink-2);margin-top:8px;padding-top:8px;border-top:1px solid var(--line);line-height:1.5;font-style:italic}
+
+#landing .lp-export{max-width:1240px;width:100%;margin:0 auto;padding:8px 40px 56px}
+#landing .ex-head{border-top:1px solid var(--line);padding-top:28px;margin-bottom:24px}
+#landing .ex-head h2{font-size:clamp(24px,3vw,32px);font-weight:400;color:var(--ink)}
+#landing .ex-head p{margin-top:8px;font-size:14px;color:var(--ink-2);max-width:520px}
+#landing .ex-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+#landing .ex-card{background:var(--card);border:1px solid var(--line);border-radius:3px;padding:20px 22px}
+#landing .ex-top{display:flex;align-items:center;gap:10px;margin-bottom:11px}
+#landing .ex-name{font-size:18px;font-weight:500;color:var(--ink)}
+#landing .ex-badge{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;padding:3px 8px;border-radius:20px;border:1px solid var(--line-2);color:var(--ink-3)}
+#landing .ex-badge.rec{color:#141b2e;background:var(--gold);border-color:var(--gold)}
+#landing .ex-card p{font-size:13.5px;color:var(--ink-2);line-height:1.6}
+#landing .ex-card p b{color:var(--ink);font-weight:600}
+#landing .ex-card a{display:inline-block;margin-top:13px;font-size:13px;font-weight:600;color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(212,175,55,.3);padding-bottom:1px;transition:border-color .2s}
+#landing .ex-card a:hover{border-color:var(--gold)}
+#landing .ex-cols{margin-top:13px;font-size:11px;line-height:1.9;color:var(--ink-3);letter-spacing:.01em;background:var(--card-2);border:1px solid var(--line);border-radius:2px;padding:10px 12px}
+
+#landing .lp-foot{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;padding:20px 40px;border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-3)}
+#landing .lp-foot .mono{color:var(--ink-2)}
+#landing .landing-bmc{margin:0;transform:scale(.78);transform-origin:right center}
+
+@media(max-width:980px){#landing .lp-hero{grid-template-columns:1fr;gap:34px}#landing .ex-grid{grid-template-columns:1fr}}
+@media(max-width:560px){#landing .lp-top,#landing .lp-hero,#landing .lp-export,#landing .lp-foot{padding-left:20px;padding-right:20px}#landing .lp-foot{justify-content:center}#landing .landing-bmc{transform-origin:center}}
 </style>
 </head>
 <body>
 
 <!-- Landing screen -->
 <div id="landing">
-<h2>CellarMapper</h2>
-<p class="subtitle">Your wine collection, visualized. Explore terroir, geology, soil, and climate overlays on an interactive world map.</p>
+  <div class="lp-top">
+    <div class="wordmark"><span class="dot"></span>CellarMapper</div>
+    <div class="meta mono">TERROIR ATLAS</div>
+  </div>
 
-<div class="landing-features">
-<div class="landing-feature">
-<div class="feat-title">Terroir Overlays</div>
-<div class="feat-desc">Geology, soil, climate, elevation, and cropland layers</div>
-</div>
-<div class="landing-feature">
-<div class="feat-title">Collection Insights</div>
-<div class="feat-desc">Charts by country, varietal, and timeline</div>
-</div>
-<div class="landing-feature">
-<div class="feat-title">Tasting Notes</div>
-<div class="feat-desc">Your notes pinned to each wine's origin</div>
-</div>
-</div>
+  <div class="lp-hero">
+    <div class="lp-copy">
+      <h1>Map every bottle to the <em>terroir</em> it came from.</h1>
+      <p class="sub">Drop in a CSV from CellarTracker or Vivino and watch your collection settle onto a world map — layered with geology, soil, climate, and elevation. Nothing leaves your browser.</p>
+      <div class="lp-cta">
+        <button class="btn wine" onclick="loadSample()">Load sample collection</button>
+      </div>
+      <div class="drop-zone" id="drop-zone">
+        <h3>Drop your CSV here</h3>
+        <p>or click to browse</p>
+        <input type="file" id="csv-input" accept=".csv,.txt">
+      </div>
+      <div id="upload-error"></div>
+    </div>
 
-<img src="preview.png" alt="CellarMapper preview showing wine regions with geology overlay" style="width:100%;max-width:680px;border-radius:16px;border:1px solid rgba(255,255,255,.06);margin-bottom:48px;display:none;box-shadow:0 24px 80px rgba(0,0,0,.3)" id="preview-img" onload="this.style.display='block'" onerror="this.style.display='none'">
+    <!-- stratigraphic specimen plate -->
+    <div class="plate">
+      <div class="plate-head">
+        <span class="t">Stratigraphic column</span>
+        <span class="c">38.51°N · 122.31°W</span>
+      </div>
+      <div class="strata">
+        <div class="band vines"><span class="lab">🍇 Vines · topsoil</span><span class="age">surface</span></div>
+        <div class="band q"><span>Quaternary</span><span class="age">0–2.6 Ma</span></div>
+        <div class="band n"><span>Neogene</span><span class="age">2.6–23 Ma</span></div>
+        <div class="band pg"><span>Paleogene</span><span class="age">23–66 Ma</span></div>
+        <div class="band k"><span>Cretaceous · limestone</span><span class="age">66–145 Ma</span></div>
+        <div class="band j"><span>Jurassic · shale</span><span class="age">145–201 Ma</span></div>
+      </div>
+      <div class="pin"></div>
+      <div class="mini-pop">
+        <div class="nm">Failla Chardonnay</div>
+        <div class="mt">COOMBSVILLE · NAPA · 2021</div>
+        <div class="terr">Volcanic loam over Franciscan shale — cool valley floor, marine influence.</div>
+      </div>
+    </div>
+  </div>
 
-<div class="drop-zone" id="drop-zone">
-<h3>Drop your CSV here</h3>
-<p>or click to browse</p>
-<input type="file" id="csv-input" accept=".csv,.txt">
-</div>
-<div id="upload-error"></div>
-<details id="upload-info">
-<summary>How to export your data</summary>
-<br>
-<b>CellarTracker</b> <span style="color:#d4af37;font-size:11px">(recommended — richest data)</span><br>
-Follow the official guide: <a href="https://support.cellartracker.com/article/29-exporting-data" target="_blank">Exporting Data from CellarTracker</a><br><br>
-<b>Vivino</b> <span style="color:rgba(255,255,255,.35);font-size:11px">(limited — no tasting notes, type, or appellation)</span><br>
-Vivino doesn't have a native export. Use the <a href="https://github.com/sulfo/Vivino-Exporter" target="_blank">Vivino Exporter</a> browser extension to export your wines as CSV, then upload here.<br><br>
-<b>Other apps</b><br>
-Any CSV works if it has at minimum a <code style="background:rgba(255,255,255,.1);padding:1px 4px;border-radius:3px;font-size:11px">Wine</code> and <code style="background:rgba(255,255,255,.1);padding:1px 4px;border-radius:3px;font-size:11px">Country</code> column. Additional supported columns: <code style="background:rgba(255,255,255,.1);padding:1px 4px;border-radius:3px;font-size:11px">Vintage</code>, <code style="background:rgba(255,255,255,.1);padding:1px 4px;border-radius:3px;font-size:11px">Region</code>, <code style="background:rgba(255,255,255,.1);padding:1px 4px;border-radius:3px;font-size:11px">SubRegion</code>, <code style="background:rgba(255,255,255,.1);padding:1px 4px;border-radius:3px;font-size:11px">Appellation</code>, <code style="background:rgba(255,255,255,.1);padding:1px 4px;border-radius:3px;font-size:11px">Varietal</code>, <code style="background:rgba(255,255,255,.1);padding:1px 4px;border-radius:3px;font-size:11px">Color</code>, <code style="background:rgba(255,255,255,.1);padding:1px 4px;border-radius:3px;font-size:11px">Type</code>, <code style="background:rgba(255,255,255,.1);padding:1px 4px;border-radius:3px;font-size:11px">Consumed</code>, <code style="background:rgba(255,255,255,.1);padding:1px 4px;border-radius:3px;font-size:11px">Note</code>. Missing columns are skipped gracefully.
-</details>
-<div class="landing-bmc"><script type="text/javascript" src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js" data-name="bmc-button" data-slug="Jon.L" data-color="#9196a0" data-emoji="🍷" data-font="Cookie" data-text="Buy me a glass" data-outline-color="#9196a0" data-font-color="#000000" data-coffee-color="#FFDD00" ></script></div>
+  <section class="lp-export">
+    <div class="ex-head">
+      <h2>How to export your data</h2>
+      <p>Your collection never leaves your browser — drop the CSV straight onto the page.</p>
+    </div>
+    <div class="ex-grid">
+      <div class="ex-card">
+        <div class="ex-top"><span class="ex-name">CellarTracker</span><span class="ex-badge rec">Recommended</span></div>
+        <p>The richest export — types, varietals, appellations, vintages and tasting notes all come through.</p>
+        <a href="https://support.cellartracker.com/article/29-exporting-data" target="_blank" rel="noopener">Exporting from CellarTracker →</a>
+      </div>
+      <div class="ex-card">
+        <div class="ex-top"><span class="ex-name">Vivino</span><span class="ex-badge">Limited</span></div>
+        <p>Works, but Vivino omits tasting notes, type and appellation. Grab the rest with a browser extension.</p>
+        <a href="https://github.com/sulfo/Vivino-Exporter" target="_blank" rel="noopener">Vivino Exporter →</a>
+      </div>
+      <div class="ex-card">
+        <div class="ex-top"><span class="ex-name">Any other app</span></div>
+        <p>Any CSV works with at least a <b>Wine</b> and <b>Country</b> column. These optional fields are picked up automatically:</p>
+        <div class="ex-cols mono">Vintage · Region · SubRegion · Appellation · Varietal · Color · Type · Consumed · Note</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="lp-foot">
+    <div class="lp-foot-line">Built on <span class="mono">Leaflet · Macrostrat · ISRIC SoilGrids · CORINE</span></div>
+    <div class="landing-bmc"><script type="text/javascript" src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js" data-name="bmc-button" data-slug="Jon.L" data-color="#9196a0" data-emoji="🍷" data-font="Cookie" data-text="Buy me a glass" data-outline-color="#9196a0" data-font-color="#000000" data-coffee-color="#FFDD00" ></script></div>
+  </div>
 </div>
 
 <!-- App (hidden until CSV loaded) -->
@@ -454,6 +570,47 @@ function resetApp(){
   document.getElementById('app').style.display='none';
   document.getElementById('landing').style.display='flex';
   csvInput.value='';
+}
+
+// ===== SAMPLE COLLECTION =====
+// A small curated set so visitors can explore without their own CSV. All
+// regions exist in GEO, so it renders instantly with no geocoding requests.
+const SAMPLE_CSV=`Wine,Vintage,Type,Varietal,Country,Region,Consumed,Note
+Eisele Vineyard Cabernet,2018,Red,Cabernet Sauvignon,USA,Napa Valley,2024-03-12,Cassis and graphite with a long structured finish
+Kistler Chardonnay,2020,White,Chardonnay,USA,Russian River Valley,2023-11-02,Lemon oil and struck flint
+Domaine Serene Pinot Noir,2019,Red,Pinot Noir,USA,Willamette Valley,2024-07-19,Red cherry and forest floor
+Domaine Leflaive Puligny-Montrachet,2019,White,Chardonnay,France,Burgundy,2022-05-21,Chalk and white flowers
+Château Margaux,2016,Red,Red Blend,France,Bordeaux,2025-01-15,Cedar violets and endless length
+Krug Grande Cuvée,2018,Sparkling,Champagne Blend,France,Champagne,2023-12-31,Brioche hazelnut and a fine mousse
+Domaine Tempier Bandol Rosé,2022,Rosé,Mourvèdre,France,Côtes de Provence,2024-06-08,Wild strawberry and warm stone
+Dr. Loosen Riesling,2020,White,Riesling,Germany,Mosel,2023-08-14,Slate apricot and bright acidity
+Biondi-Santi Brunello,2016,Red,Sangiovese,Italy,Brunello di Montalcino,2024-10-03,Dried cherry leather and balsamic herbs
+Penfolds Grange,2017,Red,Shiraz,Australia,Barossa Valley,2025-02-20,Blackberry mocha and sweet spice
+Catena Zapata Malbec,2019,Red,Malbec,Argentina,Mendoza,2024-04-27,Violet plum and high-altitude lift
+Cloudy Bay Sauvignon Blanc,2022,White,Sauvignon Blanc,New Zealand,Marlborough,2023-09-30,Passionfruit and cut grass
+Quinta do Noval,2017,Red,Touriga Nacional,Portugal,Douro,2024-12-11,Dark berry schist and grip
+La Rioja Alta Gran Reserva,2012,Red,Tempranillo,Spain,Rioja,2025-03-05,Dried rose old wood and orange peel
+Mullineux Old Vines White,2021,White,Chenin Blanc,South Africa,Stellenbosch,2024-01-22,Quince honey and granite
+Clos Mogador,2018,Red,Garnacha,Spain,Priorat,2025-04-18,Black licorice and crushed slate`;
+
+function loadSample(){
+  uploadError.style.display='none';
+  // Seed country fallbacks so geocodeAllWines never hits the network for the sample.
+  Object.assign(GEO,{"USA":[39.5,-98.35],"France":[46.6,2.4],"Germany":[51.0,9.5],
+    "Italy":[42.8,12.5],"Spain":[40.0,-3.7],"Australia":[-25.3,133.8],
+    "Argentina":[-34.0,-64.0],"New Zealand":[-41.5,172.8],"Portugal":[39.5,-8.0],
+    "South Africa":[-30.6,22.9]});
+  try{
+    let result=parseCSV(SAMPLE_CSV);
+    if(result.validRows===0)throw new Error('Sample data failed to load.');
+    wines=result.wines;
+    document.getElementById('landing').style.display='none';
+    document.getElementById('app').style.display='block';
+    initApp();
+  }catch(err){
+    uploadError.textContent='Error: '+err.message;
+    uploadError.style.display='block';
+  }
 }
 
 // ===== CORE APP LOGIC =====
