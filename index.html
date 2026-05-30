@@ -289,6 +289,7 @@ html::-webkit-scrollbar-thumb:hover,body::-webkit-scrollbar-thumb:hover{backgrou
   <div class="lp-foot">
     <div class="lp-foot-line">Built on <span class="mono">Leaflet · Macrostrat · ISRIC SoilGrids · CORINE</span></div>
     <a class="bmc-glass" href="https://www.buymeacoffee.com/Jon.L" target="_blank" rel="noopener"><span class="g" aria-hidden="true">🍷</span> Buy me a glass</a>
+    <div class="lp-foot-line">© 2026 Jonathan Lopes</div>
   </div>
 </div>
 
@@ -901,11 +902,11 @@ function syncOverlayToMap2(name,visible){
 }
 function createMap2Layer(name){
   let layers={
-    'climate':()=>L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}',{opacity:0.5,maxZoom:8}),
-    'elev':()=>L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{opacity:0.55,maxZoom:17}),
-    'sat':()=>L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{opacity:0.7,maxZoom:19}),
-    'soil':()=>L.tileLayer.wms('https://maps.isric.org/mapserv?map=/map/wrb.map',{layers:'MostProbable',format:'image/png',transparent:true,opacity:0.5}),
-    'geo':()=>L.tileLayer('https://tiles.macrostrat.org/carto/{z}/{x}/{y}.png',{opacity:0.45,maxZoom:18}),
+    'climate':()=>L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}',{attribution:'Tiles © Esri',opacity:0.5,maxZoom:8}),
+    'elev':()=>L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{attribution:'© OpenTopoMap (CC-BY-SA)',opacity:0.55,maxZoom:17}),
+    'sat':()=>L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Imagery © Esri, Maxar, Earthstar Geographics',opacity:0.7,maxZoom:19}),
+    'soil':()=>L.tileLayer.wms('https://maps.isric.org/mapserv?map=/map/wrb.map',{attribution:'SoilGrids © ISRIC (CC-BY 4.0)',layers:'MostProbable',format:'image/png',transparent:true,opacity:0.5}),
+    'geo':()=>L.tileLayer('https://tiles.macrostrat.org/carto/{z}/{x}/{y}.png',{attribution:'Geology © Macrostrat',opacity:0.45,maxZoom:18}),
     'crop':()=>L.tileLayer.wms('https://image.discomap.eea.europa.eu/arcgis/services/Corine/CLC2018_WM/MapServer/WMSServer',{layers:'12',format:'image/png',transparent:true,opacity:0.55,maxZoom:18}),
   };
   return layers[name]?layers[name]():null;
@@ -1286,11 +1287,11 @@ function initApp(){
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'©OpenStreetMap ©CARTO',maxZoom:18}).addTo(map);
   mapLayerGroup=L.layerGroup().addTo(map);
   // Overlay layers
-  climateLayer=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}',{opacity:0.5,maxZoom:8});
-  elevLayer=L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{opacity:0.55,maxZoom:17});
-  satLayer=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{opacity:0.7,maxZoom:19});
-  soilLayer=L.tileLayer.wms('https://maps.isric.org/mapserv?map=/map/wrb.map',{layers:'MostProbable',format:'image/png',transparent:true,opacity:0.5});
-  geoLayer=L.tileLayer('https://tiles.macrostrat.org/carto/{z}/{x}/{y}.png',{opacity:0.45,maxZoom:18});
+  climateLayer=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}',{attribution:'Tiles © Esri',opacity:0.5,maxZoom:8});
+  elevLayer=L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{attribution:'© OpenTopoMap (CC-BY-SA)',opacity:0.55,maxZoom:17});
+  satLayer=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Imagery © Esri, Maxar, Earthstar Geographics',opacity:0.7,maxZoom:19});
+  soilLayer=L.tileLayer.wms('https://maps.isric.org/mapserv?map=/map/wrb.map',{attribution:'SoilGrids © ISRIC (CC-BY 4.0)',layers:'MostProbable',format:'image/png',transparent:true,opacity:0.5});
+  geoLayer=L.tileLayer('https://tiles.macrostrat.org/carto/{z}/{x}/{y}.png',{attribution:'Geology © Macrostrat',opacity:0.45,maxZoom:18});
   regionLayer=buildRegionLayer();
   map.on('zoomend',()=>updateRegionVis(map,regionLayer));
   setupMapClickHandler(map);
